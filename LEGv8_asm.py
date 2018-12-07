@@ -63,11 +63,11 @@ while program_running:
             if (instruction_list[0] == 'LDUR'): # LDUR
                 
                 print('Register[' + str(rt) + '] = RAM[ Register[' + str(rn) + ']' + ('' if len(instruction_list) < 4 else (' + ' + str(dt_address))) + ' ]')
-                machine_code += str(bin(dt_address)[2:].zfill(9))+ str(bin(rn + dt_address)[2:].zfill(5)) + op + str(bin(rt)[2:].zfill(5))
+                machine_code += str(bin(dt_address)[2:].zfill(9))+ op + str(bin(rn)[2:].zfill(5)) + str(bin(rt)[2:].zfill(5))
             else: # STUR
                 
                 print('RAM[ Register[' + str(rn) + ']' + ('' if len(instruction_list) < 4 else (' + ' + str(dt_address))) + ' ] = Register[' + str(rt) + ']')
-                machine_code += str(bin(dt_address)[2:].zfill(9))+ str(bin(rn + dt_address)[2:].zfill(5)) + op + str(bin(rt)[2:].zfill(5))
+                machine_code += str(bin(dt_address)[2:].zfill(9))+ op + str(bin(rn)[2:].zfill(5)) + str(bin(rt)[2:].zfill(5))
 
         elif (instruction_list[0] == 'ADD' or instruction_list[0] == 'SUB' or
             instruction_list[0] == 'ORR' or instruction_list[0] == 'AND' or
