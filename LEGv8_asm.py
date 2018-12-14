@@ -16,7 +16,7 @@ print("example for R-type: ADD r1,r2,r3")
 print("example for D-type: LDUR r3, [r10, #1]")
 print("example for B-type: B #2")
 print("example for CB-type: CBZ r1, #2 or CBNZ r1, #2")
-print("to exit the program just typr: quit")
+print("to exit the program just type: quit")
 print("###########################################################")
 print()
 
