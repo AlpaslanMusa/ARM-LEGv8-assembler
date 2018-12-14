@@ -16,8 +16,10 @@ print("example for R-type: ADD r1,r2,r3")
 print("example for D-type: LDUR r3, [r10, #1]")
 print("example for B-type: B #2")
 print("example for CB-type: CBZ r1, #2 or CBNZ r1, #2")
+print("to exit the program just typr: quit")
 print("###########################################################")
 print()
+
 while program_running:
     # Get Instruction from keyboard
     raw_instruction = input('\nEnter an ARM LEGv8 Assembly Instruction: ')
@@ -30,10 +32,11 @@ while program_running:
     # Otherwise, nope, user wants to keep going
     else:
         # Formatting the inputted string for parsing
-        formatted_instruction = raw_instruction.replace(' ', ',').replace(']', '').replace('[', '')
+        formatted_instruction = raw_instruction.replace(' ', ',').replace(']', '').replace('[', '').replace('#', '')
 
         # Split input into list for parsing
         instruction_list = list(filter(None, formatted_instruction.split(',')))
+        print(instruction_list)
         # One-to-one relationship between opcodes and their binary representation
         OPCODES = {
             'LDUR' : ['11111000010'],
@@ -61,18 +64,18 @@ while program_running:
             rt = int(''.join(filter(str.isdigit, instruction_list[1])))
 
             if (instruction_list[0] == 'LDUR'): # LDUR
-                
+
                 print('Register[' + str(rt) + '] = RAM[ Register[' + str(rn) + ']' + ('' if len(instruction_list) < 4 else (' + ' + str(dt_address))) + ' ]')
                 machine_code += str(bin(dt_address)[2:].zfill(9))+ op + str(bin(rn)[2:].zfill(5)) + str(bin(rt)[2:].zfill(5))
             else: # STUR
-                
+
                 print('RAM[ Register[' + str(rn) + ']' + ('' if len(instruction_list) < 4 else (' + ' + str(dt_address))) + ' ] = Register[' + str(rt) + ']')
                 machine_code += str(bin(dt_address)[2:].zfill(9))+ op + str(bin(rn)[2:].zfill(5)) + str(bin(rt)[2:].zfill(5))
 
         elif (instruction_list[0] == 'ADD' or instruction_list[0] == 'SUB' or
             instruction_list[0] == 'ORR' or instruction_list[0] == 'AND' or
             instruction_list[0] == 'EOR'): # R-Type
-                
+
             rm = int(''.join(filter(str.isdigit, instruction_list[3])))
             shamt = '000000'
             rn = int(''.join(filter(str.isdigit, instruction_list[2])))
@@ -81,39 +84,56 @@ while program_running:
             machine_code += str(bin(rm)[2:].zfill(5)) + shamt + str(bin(rn)[2:].zfill(5)) + str(bin(rd)[2:].zfill(5))
 
         elif (instruction_list[0] == 'LSL' or instruction_list[0] == 'LSR'):
-                            
+
             rm = '00000'
             shamt = int(''.join(filter(str.isdigit, instruction_list[3])))
             rn = int(''.join(filter(str.isdigit, instruction_list[2])))
             rd = int(''.join(filter(str.isdigit, instruction_list[1])))
             print('Register[' + str(rd) + '] = Register[' + str(rn) + '] ' + OPCODES[instruction_list[0]][1] + ' '+  str(shamt) )
             machine_code += rm + str(bin(shamt)[2:].zfill(6)) + str(bin(rn)[2:].zfill(5)) + str(bin(rd)[2:].zfill(5))
-                    
-        elif (instruction_list[0] == 'B'): # B-Type
 
-            br_address = int(''.join(filter(str.isdigit, instruction_list[1])))
-            print('PC = ' + str(br_address))
-            machine_code += str(bin(br_address)[2:].zfill(26))
+        elif (instruction_list[0] == 'B'): # B-Type
+            if(int(instruction_list[1]) < 0):
+                br_address = int(''.join(instruction_list[1]))
+                print('PC = PC + ' + '(' + str(br_address) + ')')
+                machine_code += str(bin(br_address & int("1"*26, 2))[2:])
+            else:
+                br_address = int(''.join(filter(str.isdigit, instruction_list[1])))
+                print('PC = + ' + '(' + str(br_address) + ')')
+                machine_code += str(bin(br_address)[2:].zfill(26))
 
         elif (instruction_list[0] == 'CBZ'): # CB-Type
 
-            cond_br_address = int(''.join(filter(str.isdigit, instruction_list[2])))
-            rt = int(''.join(filter(str.isdigit, instruction_list[1])))
-            print('if ( Register[' + str(rt) + '] == 0 ) { PC = ' + str(cond_br_address) + ' }')
-            print('else { PC++ }')
-            machine_code += str(bin(cond_br_address)[2:].zfill(19)) + str(bin(rt)[2:].zfill(5))
-            
-        elif (instruction_list[0] == 'CBNZ'):
+            if(int(instruction_list[2]) < 0):
+                cond_br_address = int(''.join(instruction_list[2]))
+                rt = int(''.join(filter(str.isdigit, instruction_list[1])))
+                print('if ( Register[' + str(rt) + '] == 0 ) { PC = PC + ' + '(' + str(cond_br_address) + ')' + ' }')
+                print('else { PC++ }')
+                machine_code += str(bin(cond_br_address & int("1"*19, 2))[2:]) + str(bin(rt)[2:].zfill(5))
+            else:
+                cond_br_address = int(''.join(filter(str.isdigit, instruction_list[2])))
+                rt = int(''.join(filter(str.isdigit, instruction_list[1])))
+                print('if ( Register[' + str(rt) + '] == 0 ) { PC = PC + ' + '(' + str(cond_br_address) + ')' + ' }')
+                print('else { PC++ }')
+                machine_code += str(bin(cond_br_address)[2:].zfill(19)) + str(bin(rt)[2:].zfill(5))
 
-            cond_br_address = int(''.join(filter(str.isdigit, instruction_list[2])))
-            rt = int(''.join(filter(str.isdigit, instruction_list[1])))
-            print('if ( Register[' + str(rt) + '] =! 0 ) { PC = ' + str(cond_br_address) + ' }')
-            print('else { PC++ }')
-            machine_code += str(bin(cond_br_address)[2:].zfill(19)) + str(bin(rt)[2:].zfill(5))
+        elif (instruction_list[0] == 'CBNZ'):
+            if(int(instruction_list[2]) < 0):
+                cond_br_address = int(''.join(instruction_list[2]))
+                rt = int(''.join(filter(str.isdigit, instruction_list[1])))
+                print('if ( Register[' + str(rt) + '] =! 0 ) { PC = PC + ' + '(' + str(cond_br_address) + ')' + ' }')
+                print('else { PC++ }')
+                machine_code += str(bin(cond_br_address & int("1"*19, 2))[2:]) + str(bin(rt)[2:].zfill(5))
+            else:
+                cond_br_address = int(''.join(filter(str.isdigit, instruction_list[2])))
+                rt = int(''.join(filter(str.isdigit, instruction_list[1])))
+                print('if ( Register[' + str(rt) + '] =! 0 ) { PC = PC + ' + '(' + str(cond_br_address) + ')' + ' }')
+                print('else { PC++ }')
+                machine_code += str(bin(cond_br_address)[2:].zfill(19)) + str(bin(rt)[2:].zfill(5))
 
         else:
             raise RuntimeError('OPCODE (' + instruction_list[0] + ') not supported')
-        
+
         # Output the machine code representation of the input
         print('\n------- Machine Code (' + str(len(machine_code)) + '-bits) -------')
         print('BINARY : ' + machine_code)
